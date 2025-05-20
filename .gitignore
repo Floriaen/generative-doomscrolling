@@ -37,4 +37,20 @@ ehthumbs.db
 Thumbs.db
 
 # Backend specific
-/backend/cache/ 
+/backend/cache/
+
+# Vite build output
+/frontend-vite/dist/
+
+# SQLite databases
+*.db
+*.db-journal
+
+# Prisma generated files
+/prisma/.env
+
+# Backend generated files
+/backend/generated/
+
+# Additional log files
+**/*.log 

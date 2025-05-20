@@ -3,6 +3,11 @@ import fs from 'fs';
 import path from 'path';
 import https from 'https';
 
+let prisma = null;
+export function setPrismaClient(client) {
+  prisma = client;
+}
+
 export class DalleImageGenerator {
     constructor(apiKey, logger = console.log) {
         if (!apiKey) {
@@ -27,6 +32,7 @@ export class DalleImageGenerator {
             fs.mkdirSync(seedDir, { recursive: true });
         }
 
+        let revisedPrompt = prompt;
         try {
             this.log('AI Generator: Calling DALL-E API...');
             // Generate image using DALL-E
@@ -42,6 +48,14 @@ export class DalleImageGenerator {
 
             if (!response.data || response.data.length === 0) {
                 throw new Error('No image data received from DALL-E');
+            }
+
+            // Extract revised_prompt if present
+            if (response.data[0].revised_prompt) {
+                revisedPrompt = response.data[0].revised_prompt;
+            }
+            if (!revisedPrompt || revisedPrompt.trim() === '') {
+                revisedPrompt = prompt;
             }
 
             // Download the image and wait for it to complete
@@ -102,9 +116,23 @@ export class DalleImageGenerator {
 
             // Only create the read stream after the download is complete
             this.log('AI Generator: Creating read stream for response');
+            // Save metadata to database (async, fire and forget)
+            if (prisma) {
+                prisma.image.create({
+                    data: {
+                        imagePath,
+                        caption: revisedPrompt,
+                        prompt,
+                        revisedPrompt,
+                        metadata: {},
+                    }
+                }).catch(console.error);
+            }
             return {
                 imagePath,
-                stream: fs.createReadStream(imagePath)
+                stream: fs.createReadStream(imagePath),
+                caption: revisedPrompt,
+                revisedPrompt
             };
 
         } catch (error) {

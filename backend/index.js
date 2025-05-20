@@ -5,8 +5,9 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import { ProceduralImageGenerator } from './generator/proceduralImageGenerator.js';
-import { DalleImageGenerator } from './generator/dalleImageGenerator.js';
+import { ProceduralImageGenerator, setPrismaClient as setProceduralPrisma } from './generator/proceduralImageGenerator.js';
+import { DalleImageGenerator, setPrismaClient as setDallePrisma } from './generator/dalleImageGenerator.js';
+import { PrismaClient } from './generated/prisma/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -44,6 +45,10 @@ const PORT = 50228;
 const aiGenerator = new DalleImageGenerator(process.env.OPENAI_API_KEY, log);
 const regularGenerator = new ProceduralImageGenerator();
 
+const prisma = new PrismaClient();
+setProceduralPrisma(prisma);
+setDallePrisma(prisma);
+
 app.use(cors());
 
 app.get('/generate-image', async (req, res) => {
@@ -67,10 +72,29 @@ app.get('/generate-image', async (req, res) => {
             const cachedImagePath = generator.constructor.getRandomCachedImage(seedDir);
             if (cachedImagePath) {
                 log('Found cached image:', cachedImagePath);
-                return res.sendFile(cachedImagePath);
+                // Fetch metadata from DB
+                const imageRecord = await prisma.image.findFirst({ where: { imagePath: cachedImagePath } });
+                if (imageRecord) {
+                    return res.json({
+                        imagePath: cachedImagePath,
+                        caption: imageRecord.caption,
+                        prompt: imageRecord.prompt,
+                        revisedPrompt: imageRecord.revisedPrompt,
+                        createdAt: imageRecord.createdAt
+                    });
+                } else {
+                    // fallback: return minimal JSON
+                    return res.json({
+                        imagePath: cachedImagePath,
+                        caption: '',
+                        prompt: '',
+                        revisedPrompt: '',
+                        createdAt: ''
+                    });
+                }
             }
             log('No cached image found');
-            return res.status(404).send('Image not found');
+            return res.status(404).json({ error: 'Image not found' });
         }
 
         if (useAI) {
@@ -79,26 +103,35 @@ app.get('/generate-image', async (req, res) => {
                 log('Error: OpenAI API key not configured');
                 return res.status(500).send('OpenAI API key not configured');
             }
-            
             try {
                 log('Starting AI image generation...');
-                const { imagePath, stream } = await aiGenerator.generateImage(seed, seedDir);
+                const { imagePath, stream, caption } = await aiGenerator.generateImage(seed, seedDir);
                 log('AI image generated successfully at:', imagePath);
-                res.setHeader('Content-Type', 'image/png');
-                res.sendFile(imagePath);
+                res.json({
+                    imagePath,
+                    caption,
+                    prompt: seed,
+                    revisedPrompt: caption,
+                    createdAt: new Date().toISOString()
+                });
             } catch (error) {
                 log('Error in AI generation:', error);
                 res.status(500).send('Error generating image: ' + error.message);
             }
         } else {
             log('=== Using Regular Generator ===');
-            const { imagePath, stream } = regularGenerator.generateImage(seed, seedDir);
-            res.setHeader('Content-Type', 'image/png');
+            const { imagePath, stream, caption } = regularGenerator.generateImage(seed, seedDir);
             const out = fs.createWriteStream(imagePath);
             stream.pipe(out);
-            out.on('finish', () => {
+            out.on('finish', async () => {
                 log('Regular image generated successfully');
-                res.sendFile(imagePath);
+                res.json({
+                    imagePath,
+                    caption,
+                    prompt: seed,
+                    revisedPrompt: null,
+                    createdAt: new Date().toISOString()
+                });
             });
         }
     } catch (error) {
@@ -115,6 +148,14 @@ app.get('/logs', (req, res) => {
     } catch (error) {
         res.status(500).send('Error reading logs');
     }
+});
+
+app.get('/image', (req, res) => {
+  const imagePath = req.query.path;
+  if (!imagePath) return res.status(400).send('No image path provided');
+  res.sendFile(imagePath, err => {
+    if (err) res.status(404).send('Image not found');
+  });
 });
 
 app.listen(PORT, '0.0.0.0', () => {

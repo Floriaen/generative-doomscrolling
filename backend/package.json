@@ -12,12 +12,17 @@
   "type": "module",
   "description": "",
   "dependencies": {
+    "@prisma/client": "^6.8.2",
     "canvas": "^3.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "openai": "^4.98.0",
     "seedrandom": "^3.0.5",
-    "simplex-noise": "^4.0.3"
+    "simplex-noise": "^4.0.3",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "prisma": "^6.8.2"
   }
 }

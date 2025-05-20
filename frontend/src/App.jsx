@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import './App.css';
 import ImageCard from './ImageCard';
+import { FaMoon, FaSun } from 'react-icons/fa';
 
 function App() {
   const [items, setItems] = useState([]);
@@ -15,6 +16,7 @@ function App() {
   const [started, setStarted] = useState(false);
   const [loadingImages, setLoadingImages] = useState([]);
   const [errorImages, setErrorImages] = useState([]);
+  const [darkTheme, setDarkTheme] = useState(false);
 
   const getApiUrl = () => {
     const baseUrl = `http://localhost:50228/generate-image?seed=${encodeURIComponent(prompt)}&useAI=${useAI}&useCache=${useCache}`;
@@ -26,30 +28,26 @@ function App() {
   };
 
   const fetchMoreData = async () => {
-    const idx = items.length;
-    setLoadingImages((prev) => [...prev, true]);
-    setErrorImages((prev) => [...prev, false]);
     try {
       const res = await fetch(getApiUrl());
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      setItems((prev) => [...prev, { url, prompt }]);
+      const data = await res.json();
+      setItems((prev) => [...prev, {
+        url: `http://localhost:50228/image?path=${encodeURIComponent(data.imagePath)}`,
+        caption: data.caption,
+        prompt: data.prompt,
+        revisedPrompt: data.revisedPrompt,
+        createdAt: data.createdAt
+      }]);
+      setLoadingImages((prev) => [...prev, false]);
+      setErrorImages((prev) => [...prev, false]);
     } catch (err) {
       console.error('Error fetching data:', err);
       setHasMore(false);
-      setLoadingImages((prev) => {
-        const updated = [...prev];
-        updated[idx] = false;
-        return updated;
-      });
-      setErrorImages((prev) => {
-        const updated = [...prev];
-        updated[idx] = true;
-        return updated;
-      });
+      setLoadingImages((prev) => [...prev, false]);
+      setErrorImages((prev) => [...prev, true]);
     }
   };
 
@@ -107,7 +105,25 @@ function App() {
   };
 
   return (
-    <div className="App">
+    <div className={`App${darkTheme ? ' dark-theme' : ''}`}>
+      {/* Theme toggle button */}
+      <button
+        onClick={() => setDarkTheme((v) => !v)}
+        style={{
+          position: 'fixed',
+          top: 20,
+          right: 30,
+          zIndex: 100,
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          fontSize: 26,
+          color: darkTheme ? '#fff' : '#000',
+        }}
+        aria-label="Toggle dark mode"
+      >
+        {darkTheme ? <FaSun /> : <FaMoon />}
+      </button>
       <h1>Generative Doomscrolling</h1>
       <form onSubmit={handlePromptSubmit} style={{ marginBottom: '1rem' }}>
         <input

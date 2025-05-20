@@ -2,6 +2,11 @@ import { createCanvas } from 'canvas';
 import fs from 'fs';
 import path from 'path';
 
+let prisma = null;
+export function setPrismaClient(client) {
+  prisma = client;
+}
+
 export class ProceduralImageGenerator {
     generateImage(seed, seedDir) {
         const canvas = createCanvas(512, 512);
@@ -26,6 +31,12 @@ export class ProceduralImageGenerator {
                 result += chars.charAt(Math.floor(Math.random() * chars.length));
             }
             return result;
+        }
+
+        // Generate a caption: prompt mixed with random words
+        let caption = seed;
+        for (let i = 0; i < 3; i++) {
+            caption += ' ' + randomString(Math.floor(Math.random() * 8 + 3));
         }
 
         // Draw text in a dense grid to cover the whole canvas
@@ -53,9 +64,23 @@ export class ProceduralImageGenerator {
             }
         }
 
+        // Save metadata to database (async, fire and forget)
+        if (prisma) {
+            prisma.image.create({
+                data: {
+                    imagePath,
+                    caption,
+                    prompt: seed,
+                    revisedPrompt: null,
+                    metadata: {},
+                }
+            }).catch(console.error);
+        }
+
         return {
             imagePath,
-            stream: canvas.createPNGStream()
+            stream: canvas.createPNGStream(),
+            caption
         };
     }
 
