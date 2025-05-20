@@ -1,12 +1,37 @@
-# React + Vite
+# Frontend: Generative Doomscrolling
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React + Vite web app for infinite scrolling of AI-generated and procedural images, powered by a Node.js/Express backend.
 
-Currently, two official plugins are available:
+## Features
+- Infinite scroll feed of images
+- Captions and metadata for each image
+- Loading spinners and error handling
+- Fetches images and metadata from backend API
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Setup
 
-## Expanding the ESLint configuration
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+   The app will be available at `http://localhost:3000` by default.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## How it Works
+- The frontend fetches image metadata from the backend `/generate-image` endpoint.
+- Images are displayed using the `/image` endpoint with the returned `imagePath`.
+- Captions and prompts are shown below each image.
+- Infinite scroll loads more images as you scroll down.
+
+## Backend Dependency
+- Requires the backend server to be running (see root or backend README for setup).
+
+## Customization
+- You can change prompts, toggle DALL-E/procedural generation, and use cached images from the UI.
