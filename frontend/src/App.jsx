@@ -16,7 +16,7 @@ function App() {
   const [started, setStarted] = useState(false);
   const [loadingImages, setLoadingImages] = useState([]);
   const [errorImages, setErrorImages] = useState([]);
-  const [darkTheme, setDarkTheme] = useState(false);
+  const [darkTheme, setDarkTheme] = useState(true);
 
   const getApiUrl = () => {
     const baseUrl = `http://localhost:50228/generate-image?seed=${encodeURIComponent(prompt)}&useAI=${useAI}&useCache=${useCache}`;
