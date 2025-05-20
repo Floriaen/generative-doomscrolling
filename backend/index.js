@@ -5,8 +5,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import { ImageGenerator } from './imageGenerator.js';
-import { ImageAIGenerator } from './imageAIGenerator.js';
+import { ProceduralImageGenerator } from './generator/proceduralImageGenerator.js';
+import { DalleImageGenerator } from './generator/dalleImageGenerator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -41,8 +41,8 @@ const app = express();
 const PORT = 50228;
 
 // Initialize generators
-const aiGenerator = new ImageAIGenerator(process.env.OPENAI_API_KEY, log);
-const regularGenerator = new ImageGenerator();
+const aiGenerator = new DalleImageGenerator(process.env.OPENAI_API_KEY, log);
+const regularGenerator = new ProceduralImageGenerator();
 
 app.use(cors());
 

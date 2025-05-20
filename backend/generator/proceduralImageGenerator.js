@@ -2,7 +2,7 @@ import { createCanvas } from 'canvas';
 import fs from 'fs';
 import path from 'path';
 
-export class ImageGenerator {
+export class ProceduralImageGenerator {
     generateImage(seed, seedDir) {
         const canvas = createCanvas(512, 512);
         const ctx = canvas.getContext('2d');

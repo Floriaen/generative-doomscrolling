@@ -3,13 +3,13 @@ import fs from 'fs';
 import path from 'path';
 import https from 'https';
 
-export class ImageAIGenerator {
+export class DalleImageGenerator {
     constructor(apiKey, logger = console.log) {
         if (!apiKey) {
             throw new Error('OpenAI API key is required');
         }
         this.log = logger;
-        this.log('Initializing ImageAIGenerator with API key:', apiKey.substring(0, 7) + '...');
+        this.log('Initializing DalleImageGenerator with API key:', apiKey.substring(0, 7) + '...');
         this.openai = new OpenAI({ apiKey });
     }
 
