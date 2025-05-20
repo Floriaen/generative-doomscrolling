@@ -40,7 +40,7 @@ Thumbs.db
 /backend/cache/
 
 # Vite build output
-/frontend-vite/dist/
+/frontend/dist/
 
 # SQLite databases
 *.db
