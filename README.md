@@ -1,5 +1,7 @@
 # Generative Doomscrolling
 
+![Generative Doomscrolling Screenshot](./assets/screenshot.png)
+
 An infinite scroll of AI-generated images, powered by DALL-E and procedural generation. The project consists of a React frontend and a Node.js/Express backend with Prisma ORM and SQLite for metadata storage.
 
 ## Features
